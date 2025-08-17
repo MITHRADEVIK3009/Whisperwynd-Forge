@@ -6,7 +6,7 @@
           "name": "shared_sharepointonline"
         },
         "connection": {
-          "connectionReferenceLogicalName": "Default_whisperwyndChatbot.shared_sharepointonline.shared-sharepointonl-3316647d-f9a1-4ec6-878e-917b41603195"
+          "connectionReferenceLogicalName": " "
         },
         "runtimeSource": "invoker"
       }
@@ -42,33 +42,18 @@
           "type": "OpenApiConnection",
           "inputs": {
             "parameters": {
-              "dataset": "https://argentquest.sharepoint.com/sites/WorldWhisperwynd",
+              "dataset": " ",
               "table": "a3852ec9-cbe3-4366-aae7-bd6bb274947b",
               "$orderby": "Title",
               "$top": 100
             },
             "host": {
-              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "apiId": " ",
               "operationId": "GetItems",
               "connectionName": "shared_sharepointonline"
             }
           },
           "runAfter": {}
-        },
-        "Select": {
-          "type": "Select",
-          "inputs": {
-            "from": "@outputs('Get_items')?['body/value']",
-            "select": {
-              "title": "@item()?['Title']",
-              "value": "@item()?['ID']"
-            }
-          },
-          "runAfter": {
-            "Initialize_variable": [
-              "Succeeded"
-            ]
-          }
         },
         "Initialize_variable": {
           "type": "InitializeVariable",
@@ -82,6 +67,65 @@
           },
           "runAfter": {
             "Get_items": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Select": {
+          "type": "Select",
+          "inputs": {
+            "from": "@outputs('Get_items')?['body/value']",
+            "select": {
+              "title": "@{item()?['Title']}",
+              "value": "@{item()?['ID']}",
+              "description": "@{item()?['Description']}",   // persona description
+              "role": "@{item()?['Role']}",                 // persona role
+              "avatar": "@{item()?['AvatarUrl']}"           // persona avatar image
+            }
+          },
+          "runAfter": {
+            "Initialize_variable": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Card": {
+          "type": "Compose",
+          "inputs": {
+            "type": "AdaptiveCard",
+            "body": [
+              {
+                "type": "TextBlock",
+                "text": "**Choose Your Persona**",
+                "size": "Large",
+                "weight": "Bolder",
+                "wrap": true,
+                "separator": true
+              },
+              {
+                "type": "TextBlock",
+                "text": "Each persona comes with a role and abilities. Pick wisely!",
+                "wrap": true,
+                "spacing": "Small"
+              },
+              {
+                "type": "Input.ChoiceSet",
+                "id": "selectedPersona",
+                "style": "expanded",
+                "choices": "@outputs('Select')"
+              }
+            ],
+            "actions": [
+              {
+                "type": "Action.Submit",
+                "title": "Submit"
+              }
+            ],
+            "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+            "version": "1.6"
+          },
+          "runAfter": {
+            "Select": [
               "Succeeded"
             ]
           }
@@ -118,6 +162,15 @@
                       },
                       "value": {
                         "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "role": {
+                        "type": "string"
+                      },
+                      "avatar": {
+                        "type": "string"
                       }
                     }
                   }
@@ -131,41 +184,30 @@
             ]
           }
         },
-        "Card": {
-          "type": "Compose",
-          "inputs": {
-            "type": "AdaptiveCard",
-            "body": [
-              {
-                "type": "TextBlock",
-                "text": "Please select a Persona",
-                "wrap": true
-              },
-              {
-                "type": "Input.ChoiceSet",
-                "id": "selectedPersona",
-                "style": "expanded",
-                "choices": "@outputs('Select')"
+        "Health_Check": {
+          "type": "Scope",
+          "actions": {
+            "Failure_Notice": {
+              "type": "Response",
+              "kind": "Http",
+              "inputs": {
+                "statusCode": 500,
+                "body": {
+                  "error": "Could not load personas. Please try again later."
+                }
               }
-            ],
-            "actions": [
-              {
-                "type": "Action.Submit",
-                "title": "Submit"
-              }
-            ],
-            "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
-            "version": "1.6"
+            }
           },
           "runAfter": {
-            "Select": [
-              "Succeeded"
+            "Get_items": [
+              "Failed",
+              "TimedOut"
             ]
           }
         }
       },
       "outputs": {},
-      "description": "This flow is triggered manually and retrieves items from a specified SharePoint list. Once the items are successfully retrieved, the flow responds to the agent with a status code of 200. The sequence of actions is determined by the success of the item retrieval."
+      "description": "This flow retrieves personas from SharePoint, builds an Adaptive Card with metadata, and includes health checks for reliability."
     },
     "templateName": null
   },
