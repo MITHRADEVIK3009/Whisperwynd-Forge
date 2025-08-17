@@ -1,0 +1,116 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "api": {
+          "name": "shared_sharepointonline"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "Default_whisperwyndChatbot.shared_sharepointonline.shared-sharepointonl-3316647d-f9a1-4ec6-878e-917b41603195"
+        },
+        "runtimeSource": "invoker"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "type": "Request",
+          "kind": "Skills",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "description": "What is Title of Story",
+                  "title": "Title",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                },
+                "text_1": {
+                  "description": "What is the Content of the Story",
+                  "title": "Story Content",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                }
+              },
+              "required": [
+                "text",
+                "text_1"
+              ]
+            }
+          }
+        }
+      },
+      "actions": {
+        "Respond_to_the_agent": {
+          "type": "Response",
+          "kind": "Skills",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "resultcode": {
+                  "title": "ResultCode",
+                  "description": "Determine if the Story was saved.",
+                  "type": "string",
+                  "x-ms-content-hint": "TEXT",
+                  "x-ms-dynamically-added": true
+                }
+              },
+              "additionalProperties": {}
+            },
+            "statusCode": 200,
+            "body": {
+              "resultcode": "Ok"
+            }
+          },
+          "runAfter": {
+            "Create_file": [
+              "SUCCEEDED"
+            ]
+          }
+        },
+        "Create_file": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://argentquest.sharepoint.com/sites/WorldWhisperwynd",
+              "folderPath": "/GeneratedStories",
+              "name": "@{triggerBody()?['text']}.txt",
+              "body": "@triggerBody()?['text_1']"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "operationId": "CreateFile",
+              "connectionName": "shared_sharepointonline"
+            }
+          },
+          "runAfter": {},
+          "runtimeConfiguration": {
+            "contentTransfer": {
+              "transferMode": "Chunked"
+            }
+          }
+        }
+      },
+      "outputs": {},
+      "description": "This flow is triggered manually and requires the user to input the title and content of a story. Once the inputs are provided, the flow responds to the agent with a result code indicating whether the story was saved successfully. The response includes a status code of 200 and a body containing the result code \"Ok\". The logical flow is determined by the \"runAfter\" property, not the position of actions in the workflow definition."
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

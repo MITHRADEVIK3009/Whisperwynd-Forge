@@ -1,0 +1,173 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_sharepointonline": {
+        "api": {
+          "name": "shared_sharepointonline"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "Default_whisperwyndChatbot.shared_sharepointonline.shared-sharepointonl-3316647d-f9a1-4ec6-878e-917b41603195"
+        },
+        "runtimeSource": "invoker"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "manual": {
+          "type": "Request",
+          "kind": "Skills",
+          "inputs": {
+            "schema": {
+              "type": "object",
+              "properties": {},
+              "required": []
+            }
+          }
+        }
+      },
+      "actions": {
+        "Get_items": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "dataset": "https://argentquest.sharepoint.com/sites/WorldWhisperwynd",
+              "table": "a3852ec9-cbe3-4366-aae7-bd6bb274947b",
+              "$orderby": "Title",
+              "$top": 100
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+              "operationId": "GetItems",
+              "connectionName": "shared_sharepointonline"
+            }
+          },
+          "runAfter": {}
+        },
+        "Select": {
+          "type": "Select",
+          "inputs": {
+            "from": "@outputs('Get_items')?['body/value']",
+            "select": {
+              "title": "@item()?['Title']",
+              "value": "@item()?['ID']"
+            }
+          },
+          "runAfter": {
+            "Initialize_variable": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Initialize_variable": {
+          "type": "InitializeVariable",
+          "inputs": {
+            "variables": [
+              {
+                "name": "Body",
+                "type": "array"
+              }
+            ]
+          },
+          "runAfter": {
+            "Get_items": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Compose": {
+          "type": "Compose",
+          "inputs": {
+            "adaptiveCard": "@outputs('Card')"
+          },
+          "runAfter": {
+            "Card": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Response": {
+          "type": "Response",
+          "kind": "Http",
+          "inputs": {
+            "statusCode": 200,
+            "body": {
+              "choices": "@outputs('Select')"
+            },
+            "schema": {
+              "type": "object",
+              "properties": {
+                "choices": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "title": {
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Compose": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Card": {
+          "type": "Compose",
+          "inputs": {
+            "type": "AdaptiveCard",
+            "body": [
+              {
+                "type": "TextBlock",
+                "text": "Please select a Persona",
+                "wrap": true
+              },
+              {
+                "type": "Input.ChoiceSet",
+                "id": "selectedPersona",
+                "style": "expanded",
+                "choices": "@outputs('Select')"
+              }
+            ],
+            "actions": [
+              {
+                "type": "Action.Submit",
+                "title": "Submit"
+              }
+            ],
+            "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+            "version": "1.6"
+          },
+          "runAfter": {
+            "Select": [
+              "Succeeded"
+            ]
+          }
+        }
+      },
+      "outputs": {},
+      "description": "This flow is triggered manually and retrieves items from a specified SharePoint list. Once the items are successfully retrieved, the flow responds to the agent with a status code of 200. The sequence of actions is determined by the success of the item retrieval."
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

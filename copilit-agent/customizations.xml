@@ -1,0 +1,93 @@
+<ImportExportXml xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OrganizationVersion="9.2.25034.226" OrganizationSchemaType="Standard" CRMServerServiceabilityVersion="9.2.25034.00226">
+  <Entities></Entities>
+  <Roles></Roles>
+  <Workflows>
+    <Workflow WorkflowId="{305346d2-7121-f011-9989-6045bd018e81}" Name="WriteGeneratedStory" Description="This flow is triggered manually and requires the user to input the title and content of a story. Once the inputs are provided, the flow responds to the agent with a result code indicating whether the story was saved successfully. The response includes a status code of 200 and a body containing the result code &quot;Ok&quot;. The logical flow is determined by the &quot;runAfter&quot; property, not the position of actions in the workflow definition.">
+      <JsonFileName>/Workflows/WriteGeneratedStory-305346D2-7121-F011-9989-6045BD018E81.json</JsonFileName>
+      <Type>1</Type>
+      <Subprocess>0</Subprocess>
+      <Category>5</Category>
+      <Mode>0</Mode>
+      <Scope>4</Scope>
+      <OnDemand>0</OnDemand>
+      <TriggerOnCreate>0</TriggerOnCreate>
+      <TriggerOnDelete>0</TriggerOnDelete>
+      <AsyncAutodelete>0</AsyncAutodelete>
+      <SyncWorkflowLogOnFailure>0</SyncWorkflowLogOnFailure>
+      <StateCode>1</StateCode>
+      <StatusCode>2</StatusCode>
+      <RunAs>1</RunAs>
+      <IsTransacted>1</IsTransacted>
+      <IntroducedVersion>1.0</IntroducedVersion>
+      <IsCustomizable>1</IsCustomizable>
+      <BusinessProcessType>0</BusinessProcessType>
+      <IsCustomProcessingStepAllowedForOtherPublishers>1</IsCustomProcessingStepAllowedForOtherPublishers>
+      <ModernFlowType>1</ModernFlowType>
+      <PrimaryEntity>none</PrimaryEntity>
+      <LocalizedNames>
+        <LocalizedName languagecode="1033" description="WriteGeneratedStory" />
+      </LocalizedNames>
+      <Descriptions>
+        <Description languagecode="1033" description="This flow is triggered manually and requires the user to input the title and content of a story. Once the inputs are provided, the flow responds to the agent with a result code indicating whether the story was saved successfully. The response includes a status code of 200 and a body containing the result code &quot;Ok&quot;. The logical flow is determined by the &quot;runAfter&quot; property, not the position of actions in the workflow definition." />
+      </Descriptions>
+    </Workflow>
+    <Workflow WorkflowId="{a7f2a8e3-fc21-f011-9989-6045bd018e81}" Name="GetPersonas" Description="This flow is triggered manually and retrieves items from a specified SharePoint list. Once the items are successfully retrieved, the flow responds to the agent with a status code of 200. The sequence of actions is determined by the success of the item retrieval.">
+      <JsonFileName>/Workflows/GetPersonas-A7F2A8E3-FC21-F011-9989-6045BD018E81.json</JsonFileName>
+      <Type>1</Type>
+      <Subprocess>0</Subprocess>
+      <Category>5</Category>
+      <Mode>0</Mode>
+      <Scope>4</Scope>
+      <OnDemand>0</OnDemand>
+      <TriggerOnCreate>0</TriggerOnCreate>
+      <TriggerOnDelete>0</TriggerOnDelete>
+      <AsyncAutodelete>0</AsyncAutodelete>
+      <SyncWorkflowLogOnFailure>0</SyncWorkflowLogOnFailure>
+      <StateCode>1</StateCode>
+      <StatusCode>2</StatusCode>
+      <RunAs>1</RunAs>
+      <IsTransacted>1</IsTransacted>
+      <IntroducedVersion>1.0</IntroducedVersion>
+      <IsCustomizable>1</IsCustomizable>
+      <BusinessProcessType>0</BusinessProcessType>
+      <IsCustomProcessingStepAllowedForOtherPublishers>1</IsCustomProcessingStepAllowedForOtherPublishers>
+      <ModernFlowType>1</ModernFlowType>
+      <PrimaryEntity>none</PrimaryEntity>
+      <LocalizedNames>
+        <LocalizedName languagecode="1033" description="GetPersonas" />
+      </LocalizedNames>
+      <Descriptions>
+        <Description languagecode="1033" description="This flow is triggered manually and retrieves items from a specified SharePoint list. Once the items are successfully retrieved, the flow responds to the agent with a status code of 200. The sequence of actions is determined by the success of the item retrieval." />
+      </Descriptions>
+    </Workflow>
+  </Workflows>
+  <FieldSecurityProfiles></FieldSecurityProfiles>
+  <Templates />
+  <EntityMaps />
+  <EntityRelationships />
+  <OrganizationSettings />
+  <optionsets />
+  <CustomControls />
+  <EntityDataProviders />
+  <connectionreferences>
+    <connectionreference connectionreferencelogicalname="Default_whisperwyndChatbot.shared_medium.shared-medium-6ce91491-d5d8-405d-84e3-eecffb316a01">
+      <connectionreferencedisplayname>Default_whisperwyndChatbot.shared_medium.shared-medium-6ce91491-d5d8-405d-84e3-eecffb316a01</connectionreferencedisplayname>
+      <connectorid>/providers/Microsoft.PowerApps/apis/shared_medium</connectorid>
+      <iscustomizable>0</iscustomizable>
+      <promptingbehavior>0</promptingbehavior>
+      <statecode>0</statecode>
+      <statuscode>1</statuscode>
+    </connectionreference>
+    <connectionreference connectionreferencelogicalname="Default_whisperwyndChatbot.shared_sharepointonline.shared-sharepointonl-3316647d-f9a1-4ec6-878e-917b41603195">
+      <connectionreferencedisplayname>Default_whisperwyndChatbot.shared_sharepointonline.shared-sharepointonl-3316647d-f9a1-4ec6-878e-917b41603195</connectionreferencedisplayname>
+      <connectorid>/providers/Microsoft.PowerApps/apis/shared_sharepointonline</connectorid>
+      <iscustomizable>0</iscustomizable>
+      <promptingbehavior>0</promptingbehavior>
+      <statecode>0</statecode>
+      <statuscode>1</statuscode>
+    </connectionreference>
+  </connectionreferences>
+  <Languages>
+    <Language>1033</Language>
+  </Languages>
+</ImportExportXml>

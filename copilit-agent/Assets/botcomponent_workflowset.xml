@@ -1,0 +1,8 @@
+<botcomponent_workflowset>
+  <botcomponent_workflow botcomponentid.schemaname="Default_whisperwyndChatbot.topic.AC2" workflowid.workflowid="a7f2a8e3-fc21-f011-9989-6045bd018e81">
+    <iscustomizable>1</iscustomizable>
+  </botcomponent_workflow>
+  <botcomponent_workflow botcomponentid.schemaname="Default_whisperwyndChatbot.topic.MakeaStory" workflowid.workflowid="305346d2-7121-f011-9989-6045bd018e81">
+    <iscustomizable>1</iscustomizable>
+  </botcomponent_workflow>
+</botcomponent_workflowset>

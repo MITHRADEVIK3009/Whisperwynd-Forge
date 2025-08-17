@@ -1,0 +1,8 @@
+<botcomponent_connectionreferenceset>
+  <botcomponent_connectionreference botcomponentid.schemaname="Default_whisperwyndChatbot.component.Medium-Writeastory" connectionreferenceid.connectionreferencelogicalname="Default_whisperwyndChatbot.shared_medium.shared-medium-6ce91491-d5d8-405d-84e3-eecffb316a01">
+    <iscustomizable>1</iscustomizable>
+  </botcomponent_connectionreference>
+  <botcomponent_connectionreference botcomponentid.schemaname="Default_whisperwyndChatbot.component.SharePoint-Createfile" connectionreferenceid.connectionreferencelogicalname="Default_whisperwyndChatbot.shared_sharepointonline.shared-sharepointonl-3316647d-f9a1-4ec6-878e-917b41603195">
+    <iscustomizable>1</iscustomizable>
+  </botcomponent_connectionreference>
+</botcomponent_connectionreferenceset>

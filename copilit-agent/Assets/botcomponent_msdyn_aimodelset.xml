@@ -1,0 +1,5 @@
+<botcomponent_msdyn_aimodelset>
+  <botcomponent_msdyn_aimodel botcomponentid.schemaname="Default_whisperwyndChatbot.topic.PlayAdventure" msdyn_aimodelid.msdyn_aimodelid="9c63d8e3-6a82-4a59-894d-cd985ebe16e0">
+    <iscustomizable>1</iscustomizable>
+  </botcomponent_msdyn_aimodel>
+</botcomponent_msdyn_aimodelset>
