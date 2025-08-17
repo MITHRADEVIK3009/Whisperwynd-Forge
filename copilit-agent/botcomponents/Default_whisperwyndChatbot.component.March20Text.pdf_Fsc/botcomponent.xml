@@ -1,0 +1,12 @@
+<botcomponent schemaname="Default_whisperwyndChatbot.component.March20Text.pdf_Fsc">
+  <componenttype>14</componenttype>
+  <description>This knowledge source searches information contained in March20Text.pdf</description>
+  <filedata mimetype="application/pdf">March20Text.pdf</filedata>
+  <iscustomizable>0</iscustomizable>
+  <name>March20Text.pdf</name>
+  <parentbotid>
+    <schemaname>Default_whisperwyndChatbot</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

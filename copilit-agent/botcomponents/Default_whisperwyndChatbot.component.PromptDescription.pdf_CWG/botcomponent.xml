@@ -1,0 +1,12 @@
+<botcomponent schemaname="Default_whisperwyndChatbot.component.PromptDescription.pdf_CWG">
+  <componenttype>14</componenttype>
+  <description>This knowledge source searches information contained in PromptDescription.pdf</description>
+  <filedata mimetype="application/pdf">PromptDescription.pdf</filedata>
+  <iscustomizable>0</iscustomizable>
+  <name>PromptDescription.pdf</name>
+  <parentbotid>
+    <schemaname>Default_whisperwyndChatbot</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

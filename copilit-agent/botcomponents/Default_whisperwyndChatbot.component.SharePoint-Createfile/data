@@ -1,0 +1,44 @@
+kind: TaskDialog
+modelDisplayName: Add Generated Story
+modelDescription: To Sharepoint Story Library
+inputs:
+  - kind: ManualTaskInput
+    propertyName: dataset
+    value: https://argentquest.sharepoint.com/sites/WorldWhisperwynd
+
+  - kind: AutomaticTaskInput
+    propertyName: folderPath
+
+outputs:
+  - propertyName: DisplayName
+
+  - propertyName: ETag
+
+  - propertyName: FileLocator
+
+  - propertyName: Id
+
+  - propertyName: IsFolder
+
+  - propertyName: ItemId
+
+  - propertyName: LastModified
+
+  - propertyName: MediaType
+
+  - propertyName: Name
+
+  - propertyName: Path
+
+  - propertyName: Size
+
+action:
+  kind: InvokeConnectorTaskAction
+  connectionReference: Default_whisperwyndChatbot.shared_sharepointonline.shared-sharepointonl-3316647d-f9a1-4ec6-878e-917b41603195
+  connectionProperties:
+    mode: Invoker
+    usageDescription: Write the output of a story as a document
+
+  operationId: CreateFile
+
+outputMode: All

@@ -1,0 +1,10 @@
+<botcomponent schemaname="Default_whisperwyndChatbot.component.SharePoint-Createfile">
+  <componenttype>9</componenttype>
+  <iscustomizable>0</iscustomizable>
+  <name>SharePoint - Create file</name>
+  <parentbotid>
+    <schemaname>Default_whisperwyndChatbot</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

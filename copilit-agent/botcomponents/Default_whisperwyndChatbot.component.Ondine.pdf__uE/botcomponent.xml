@@ -1,0 +1,12 @@
+<botcomponent schemaname="Default_whisperwyndChatbot.component.Ondine.pdf__uE">
+  <componenttype>14</componenttype>
+  <description>This knowledge source searches information contained in Ondine.pdf</description>
+  <filedata mimetype="application/pdf">Ondine.pdf</filedata>
+  <iscustomizable>0</iscustomizable>
+  <name>Ondine.pdf</name>
+  <parentbotid>
+    <schemaname>Default_whisperwyndChatbot</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

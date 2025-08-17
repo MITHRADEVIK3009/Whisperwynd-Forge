@@ -1,0 +1,12 @@
+<botcomponent schemaname="Default_whisperwyndChatbot.component.Scamp.pdf_KCw">
+  <componenttype>14</componenttype>
+  <description>This knowledge source searches information contained in Scamp.pdf</description>
+  <filedata mimetype="application/pdf">Scamp.pdf</filedata>
+  <iscustomizable>0</iscustomizable>
+  <name>Scamp.pdf</name>
+  <parentbotid>
+    <schemaname>Default_whisperwyndChatbot</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

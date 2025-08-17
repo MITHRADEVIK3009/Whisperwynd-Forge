@@ -1,0 +1,31 @@
+kind: TaskDialog
+modelDisplayName: Write a story to medium
+modelDescription: Write a story to medium
+outputs:
+  - propertyName: data.authorId
+
+  - propertyName: data.canonicalUrl
+
+  - propertyName: data.id
+
+  - propertyName: data.license
+
+  - propertyName: data.licenseUrl
+
+  - propertyName: data.publishStatus
+
+  - propertyName: data.tags
+
+  - propertyName: data.title
+
+  - propertyName: data.url
+
+action:
+  kind: InvokeConnectorTaskAction
+  connectionReference: Default_whisperwyndChatbot.shared_medium.shared-medium-6ce91491-d5d8-405d-84e3-eecffb316a01
+  connectionProperties:
+    mode: Maker
+
+  operationId: WriteStory
+
+outputMode: All

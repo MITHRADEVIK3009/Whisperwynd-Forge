@@ -1,0 +1,10 @@
+<botcomponent schemaname="Default_whisperwyndChatbot.component.Medium-Writeastory">
+  <componenttype>9</componenttype>
+  <iscustomizable>0</iscustomizable>
+  <name>Medium - Write a story</name>
+  <parentbotid>
+    <schemaname>Default_whisperwyndChatbot</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

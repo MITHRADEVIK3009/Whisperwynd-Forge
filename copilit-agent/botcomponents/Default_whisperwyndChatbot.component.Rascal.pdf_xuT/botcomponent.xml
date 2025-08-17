@@ -1,0 +1,12 @@
+<botcomponent schemaname="Default_whisperwyndChatbot.component.Rascal.pdf_xuT">
+  <componenttype>14</componenttype>
+  <description>This knowledge source searches information contained in Rascal.pdf</description>
+  <filedata mimetype="application/pdf">Rascal.pdf</filedata>
+  <iscustomizable>0</iscustomizable>
+  <name>Rascal.pdf</name>
+  <parentbotid>
+    <schemaname>Default_whisperwyndChatbot</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

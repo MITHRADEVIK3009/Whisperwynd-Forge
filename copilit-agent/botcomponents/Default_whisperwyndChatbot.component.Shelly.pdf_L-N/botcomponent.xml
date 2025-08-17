@@ -1,0 +1,12 @@
+<botcomponent schemaname="Default_whisperwyndChatbot.component.Shelly.pdf_L-N">
+  <componenttype>14</componenttype>
+  <description>This knowledge source searches information contained in Shelly.pdf</description>
+  <filedata mimetype="application/pdf">Shelly.pdf</filedata>
+  <iscustomizable>0</iscustomizable>
+  <name>Shelly.pdf</name>
+  <parentbotid>
+    <schemaname>Default_whisperwyndChatbot</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>
