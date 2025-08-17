@@ -1,125 +1,182 @@
 import os
 import re
 import time
+import json
 import logging
-import base64
-from flask import Flask, request, jsonify, render_template
-import requests
-from azure.storage.blob import BlobServiceClient
+from datetime import datetime
+from functools import wraps
+from collections import defaultdict, deque
+from flask import Flask, request, jsonify
 from weasyprint import HTML
-from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
+# -------------------------------------------------------------------
+# CONFIGURATION
+# -------------------------------------------------------------------
 
-# -------------------- CONFIGURATION --------------------
-API_URL        = ""
-API_TOKEN      = os.environ.get("API_TOKEN")
-BEARER_TOKEN   = os.environ.get("BEARER_TOKEN")
-AZURE_CONN_STR = os.environ.get("AZURE_CONN_STR")
-CONTAINER_NAME = os.environ.get("CONTAINER_NAME", "images")
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("fluxdev-flask")
 app = Flask(__name__)
-os.makedirs("static/generated_images", exist_ok=True)
+
+# GUID format regex
 GUID_REGEX = re.compile(
-    r'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$', re.IGNORECASE
+    r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+    re.IGNORECASE,
 )
 
-# -------------------- UTILS --------------------
-def upload_blob(local_path, blob_name):
-    blob_service_client = BlobServiceClient.from_connection_string(AZURE_CONN_STR)
-    try:
-        container_client = blob_service_client.get_container_client(CONTAINER_NAME)
+# Configure enhanced logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler("app.log"),  # Log to file
+        logging.StreamHandler(),         # Log to console
+    ],
+)
+logger = logging.getLogger("image_generator")
+
+
+# -------------------------------------------------------------------
+# PERFORMANCE METRICS
+# -------------------------------------------------------------------
+
+class AppMetrics:
+    def __init__(self):
+        self.request_count = 0
+        self.total_requests = defaultdict(int)
+        self.response_times = deque(maxlen=100)
+        self.error_count = defaultdict(int)
+        self.start_time = time.time()
+        self.successful_generations = 0
+        self.failed_generations = 0
+
+    def record_request(self, endpoint, method):
+        self.request_count += 1
+        self.total_requests[f"{method} {endpoint}"] += 1
+        logger.info(f"Request #{self.request_count} - {method} {endpoint}")
+
+    def record_response_time(self, duration, success=True):
+        self.response_times.append(duration)
+        if success:
+            self.successful_generations += 1
+        else:
+            self.failed_generations += 1
+
+    def record_error(self, error_type, error_message):
+        self.error_count[error_type] += 1
+        logger.error(f"Error recorded: {error_type} - {error_message}")
+
+    def get_stats(self):
+        uptime = time.time() - self.start_time
+        avg_response_time = (
+            sum(self.response_times) / len(self.response_times)
+            if self.response_times else 0
+        )
+
+        return {
+            "uptime_seconds": round(uptime, 2),
+            "uptime_formatted": f"{uptime//3600:.0f}h {(uptime%3600)//60:.0f}m {uptime%60:.0f}s",
+            "total_requests": self.request_count,
+            "successful_generations": self.successful_generations,
+            "failed_generations": self.failed_generations,
+            "success_rate": (
+                f"{(self.successful_generations / (self.successful_generations + self.failed_generations) * 100):.1f}%"
+                if (self.successful_generations + self.failed_generations) > 0 else "N/A"
+            ),
+            "average_response_time": f"{avg_response_time:.2f}s",
+            "recent_response_times": list(self.response_times)[-10:],
+            "error_breakdown": dict(self.error_count),
+            "endpoint_usage": dict(self.total_requests),
+        }
+
+
+app_metrics = AppMetrics()
+
+
+# -------------------------------------------------------------------
+# DECORATORS
+# -------------------------------------------------------------------
+
+def monitor_performance(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        request_id = "unknown"
+        endpoint = func.__name__
+
+        if hasattr(request, "get_json"):
+            try:
+                data = request.get_json(force=True) if request.is_json else {}
+                request_id = data.get("request_id", "unknown")
+            except Exception:
+                pass
+
+        app_metrics.record_request(endpoint, getattr(request, "method", "UNKNOWN"))
+        logger.info(f"STARTING {func.__name__} - Request ID: {request_id}")
+
         try:
-            container_client.create_container()
-        except Exception:
-            pass  # Ignore if container exists
+            result = func(*args, **kwargs)
+            duration = time.time() - start_time
+            app_metrics.record_response_time(duration, success=True)
+            logger.info(f"SUCCESS {func.__name__} - Duration: {duration:.2f}s - Request ID: {request_id}")
+            return result
+        except Exception as e:
+            duration = time.time() - start_time
+            error_type = type(e).__name__
+            app_metrics.record_response_time(duration, success=False)
+            app_metrics.record_error(error_type, str(e))
+            logger.error(
+                f"FAILED {func.__name__} - Duration: {duration:.2f}s - Error: {error_type}: {str(e)} - Request ID: {request_id}"
+            )
+            raise
+    return wrapper
 
-        blob_client = blob_service_client.get_blob_client(container=CONTAINER_NAME, blob=blob_name)
-        with open(local_path, "rb") as data:
-            blob_client.upload_blob(data, overwrite=True)
-        return f"https://whiperimages.blob.core.windows.net/{CONTAINER_NAME}/{blob_name}"
-    except Exception as ex:
-        logger.error(f"Azure Blob upload error: {ex}")
-        return None
 
-
-def handle_api_error(error, request_id):
-    """
-    Convert technical errors into user-friendly messages
-    """
-    if hasattr(error, "response") and error.response is not None:
-        status_code = error.response.status_code
-
-        if status_code == 401:
-            logger.error(f"API Authentication failed for request {request_id}")
-            return {
-                "status": "error",
-                "message": "API authentication failed. Please check your API configuration.",
-                "user_message": "The image generator is not properly configured. Please contact the administrator.",
-                "error_code": "AUTH_FAILED",
-                "request_id": request_id,
+def log_request_details(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if request.is_json:
+            data = request.get_json(force=True)
+            log_data = {
+                "timestamp": datetime.now().isoformat(),
+                "endpoint": request.endpoint,
+                "method": request.method,
+                "request_id": data.get("request_id", "unknown"),
+                "prompt_length": len(data.get("prompt", "")),
+                "prompt_preview": (
+                    data.get("prompt", "")[:50] + "..."
+                    if len(data.get("prompt", "")) > 50
+                    else data.get("prompt", "")
+                ),
+                "dimensions": f"{data.get('width', 'unknown')}x{data.get('height', 'unknown')}",
+                "user_agent": request.headers.get("User-Agent", "unknown")[:100],
+                "ip_address": request.remote_addr,
             }
-        elif status_code == 403:
-            return {
-                "status": "error",
-                "message": "API access forbidden - insufficient permissions",
-                "user_message": "You don't have permission to use this service.",
-                "error_code": "ACCESS_FORBIDDEN",
-                "request_id": request_id,
-            }
-        elif status_code == 429:
-            return {
-                "status": "error",
-                "message": "API rate limit exceeded",
-                "user_message": "Too many requests. Please try again in a few minutes.",
-                "error_code": "RATE_LIMITED",
-                "request_id": request_id,
-            }
-        elif status_code >= 500:
-            return {
-                "status": "error",
-                "message": "External API service error",
-                "user_message": "The image generation service is temporarily unavailable. Please try again later.",
-                "error_code": "SERVICE_ERROR",
-                "request_id": request_id,
-            }
+            logger.info(f"REQUEST DETAILS: {json.dumps(log_data, indent=2)}")
+        return func(*args, **kwargs)
+    return wrapper
 
-    logger.error(f"Unexpected error for request {request_id}: {str(error)}")
-    return {
-        "status": "error",
-        "message": "An unexpected error occurred",
-        "user_message": "Something went wrong. Please try again or contact support.",
-        "error_code": "UNKNOWN_ERROR",
-        "request_id": request_id,
-    }
 
+# -------------------------------------------------------------------
+# UTILS
+# -------------------------------------------------------------------
 
 def check_api_configuration():
-    """
-    Check if required API keys are properly configured
-    """
-    missing_config = []
+    """Dummy placeholder until real API config is added"""
+    missing = []
+    if not os.getenv("AZURE_STORAGE_KEY"):
+        missing.append("AZURE_STORAGE_KEY")
+    return missing
 
-    if not API_TOKEN or API_TOKEN == "your_runpod_api_token_here":
-        missing_config.append("API_TOKEN")
-    if not BEARER_TOKEN or BEARER_TOKEN == "your_bearer_token_here":
-        missing_config.append("BEARER_TOKEN")
-    if not AZURE_CONN_STR or AZURE_CONN_STR == "your_azure_connection_string_here":
-        missing_config.append("AZURE_CONN_STR")
-
-    return missing_config
+def upload_blob(local_path, blob_name):
+    """Stub for blob upload - replace with actual Azure SDK upload"""
+    return f"http://localhost:5000/static/generated_images/{blob_name}"
 
 
-# -------------------- ROUTES --------------------
-@app.route("/")
-def home():
-    return render_template("index.html")
-
+# -------------------------------------------------------------------
+# ROUTES
+# -------------------------------------------------------------------
 
 @app.route("/generate", methods=["POST"])
+@monitor_performance
+@log_request_details
 def generate_image():
     data = request.get_json(force=True)
     rid = data.get("request_id")
@@ -127,136 +184,114 @@ def generate_image():
     width = data.get("width", 512)
     height = data.get("height", 512)
 
+    logger.info(f"IMAGE GENERATION REQUEST: ID={rid}, Prompt='{prompt[:100]}', Dimensions={width}x{height}")
+
     if not all([rid, prompt]):
+        app_metrics.record_error("VALIDATION_ERROR", "Missing required fields")
         return jsonify(status="error", message="Missing request_id or prompt"), 400
+
     if not GUID_REGEX.match(rid):
+        app_metrics.record_error("VALIDATION_ERROR", "Invalid GUID format")
         return jsonify(status="error", message="request_id must be a valid GUID"), 400
 
     missing_config = check_api_configuration()
     if missing_config:
-        logger.warning(f"Missing API configuration: {missing_config}")
-        return (
-            jsonify(
-                status="error",
-                message="Service configuration incomplete",
-                user_message=f"The service is not properly configured. Missing: {', '.join(missing_config)}",
-                error_code="CONFIG_MISSING",
-                request_id=rid,
-                missing_config=missing_config,
-            ),
-            503,
-        )
+        app_metrics.record_error("CONFIG_ERROR", f"Missing config: {', '.join(missing_config)}")
+        return jsonify(
+            status="error",
+            message="Service configuration incomplete",
+            user_message=f"Missing: {', '.join(missing_config)}",
+            error_code="CONFIG_MISSING",
+            request_id=rid,
+            missing_config=missing_config,
+        ), 503
 
-    headers = {"Authorization": f"Bearer {BEARER_TOKEN}", "Content-Type": "application/json"}
-    payload = {"input": {"prompt": prompt, "width": width, "height": height}}
-
-    try:
-        logger.info(f"Submitting job to RunPod /run for request {rid}")
-        response = requests.post(f"{API_URL}/run", json=payload, headers=headers, timeout=60)
-        response.raise_for_status()
-        job_info = response.json()
-        job_id = job_info.get("id")
-        if not job_id:
-            raise ValueError("Job ID not found in /run response.")
-
-        # Poll for status
-        status_url = f"{API_URL}/status/{job_id}"
-        t_start = time.time()
-        while True:
-            poll = requests.get(status_url, headers=headers, timeout=30)
-            poll.raise_for_status()
-            status_data = poll.json()
-            if status_data.get("status") == "COMPLETED":
-                result = status_data
-                break
-            elif status_data.get("status") in ("FAILED", "CANCELLED"):
-                raise RuntimeError(f"Generation {status_data.get('status')}: {status_data.get('error', '')}")
-            if time.time() - t_start > 120:
-                raise TimeoutError("Timed out waiting for completed job.")
-            time.sleep(2)
-
-        # Parse output
-        image_url = None
-        output = result.get("output")
-        if isinstance(output, dict):
-            image_url = output.get("image_url") or output.get("image")
-        elif isinstance(output, str):
-            image_url = output
-        elif isinstance(output, list) and output and isinstance(output[0], str):
-            image_url = output[0]
-        if not image_url:
-            raise ValueError("image_url not found in output.")
-
-        save_path = f"static/generated_images/{rid}.png"
-
-        if image_url.startswith("data:image"):
-            base64_data = image_url.split(",", 1)[-1]
-            image_data = base64.b64decode(base64_data)
-            with open(save_path, "wb") as f:
-                f.write(image_data)
-        elif image_url.startswith("http"):
-            img_r = requests.get(image_url, stream=True, timeout=20)
-            img_r.raise_for_status()
-            with open(save_path, "wb") as f:
-                for chunk in img_r.iter_content(1024):
-                    f.write(chunk)
-        else:
-            raise ValueError("Unrecognized image_url format!")
-
-        blob_url = upload_blob(save_path, f"{rid}.png")
-        return jsonify(status="success", image_url=f"/generated_images/{rid}.png", blob_url=blob_url)
-
-    except requests.exceptions.RequestException as e:
-        error_response = handle_api_error(e, rid)
-        return jsonify(error_response), 400
-    except Exception as e:
-        logger.exception(f"Image generation error for request {rid}")
-        error_response = handle_api_error(e, rid)
-        return jsonify(error_response), 500
+    logger.info(f"Would generate image with prompt: '{prompt}' at {width}x{height}")
+    return jsonify(
+        status="info",
+        message="Image generation would proceed here (API keys needed)",
+        request_id=rid,
+        prompt=prompt,
+        dimensions=f"{width}x{height}",
+    )
 
 
 @app.route("/convert_html_to_pdf", methods=["POST"])
+@monitor_performance
 def convert_html_to_pdf():
     data = request.get_json(force=True)
     rid = data.get("request_id")
     html_content = data.get("html")
 
     if not rid or not html_content:
+        app_metrics.record_error("VALIDATION_ERROR", "Missing PDF conversion fields")
         return jsonify(status="error", message="Missing request_id or html"), 400
+
     if not GUID_REGEX.match(rid):
+        app_metrics.record_error("VALIDATION_ERROR", "Invalid GUID for PDF")
         return jsonify(status="error", message="request_id must be a valid GUID"), 400
 
     try:
         pdf_filename = f"{rid}.pdf"
         pdf_path = os.path.join("static/generated_images", pdf_filename)
+        os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
+
         HTML(string=html_content, base_url=request.host_url).write_pdf(pdf_path)
         blob_url = upload_blob(pdf_path, pdf_filename)
+
+        logger.info(f"PDF CREATED - {pdf_filename}, Blob URL: {blob_url}")
         return jsonify(status="success", pdf_blob_url=blob_url)
     except Exception as e:
-        logger.exception("PDF generation error")
+        logger.exception(f"PDF CONVERSION FAILED - ID: {rid}")
+        app_metrics.record_error("PDF_ERROR", str(e))
         return jsonify(status="error", message=str(e)), 500
+
+
+@app.route("/stats", methods=["GET"])
+def get_stats():
+    stats = app_metrics.get_stats()
+    stats["status"] = "healthy" if app_metrics.failed_generations < app_metrics.successful_generations else "degraded"
+    stats["most_common_errors"] = dict(
+        sorted(app_metrics.error_count.items(), key=lambda x: x[1], reverse=True)[:5]
+    )
+    logger.info(f"STATS REQUESTED: {json.dumps(stats, indent=2)}")
+    return jsonify(stats)
 
 
 @app.route("/health", methods=["GET"])
 def health_check():
     missing_config = check_api_configuration()
+    stats = app_metrics.get_stats()
     health_status = {
         "service": "Image Generator",
         "status": "healthy" if not missing_config else "degraded",
-        "timestamp": time.time(),
+        "timestamp": datetime.now().isoformat(),
+        "uptime": stats["uptime_formatted"],
         "configuration": {
             "api_configured": len(missing_config) == 0,
             "missing_config": missing_config,
-            "endpoints": {
-                "generate": "/generate",
-                "pdf_convert": "/convert_html_to_pdf",
-                "health": "/health",
-            },
+        },
+        "performance": {
+            "total_requests": stats["total_requests"],
+            "success_rate": stats["success_rate"],
+            "average_response_time": stats["average_response_time"],
+        },
+        "endpoints": {
+            "generate": "/generate",
+            "pdf_convert": "/convert_html_to_pdf",
+            "health": "/health",
+            "stats": "/stats",
         },
     }
-    status_code = 200 if not missing_config else 503
-    return jsonify(health_status), status_code
+    return jsonify(health_status), (200 if not missing_config else 503)
 
+
+# -------------------------------------------------------------------
+# MAIN
+# -------------------------------------------------------------------
 
 if __name__ == "__main__":
-    app.run(debug=True, host="127.0.0.1", port=8000)
+    logger.info("Starting Image Generator Application")
+    logger.info("Statistics available at: http://localhost:5000/stats")
+    logger.info("Health check available at: http://localhost:5000/health")
+    app.run(debug=True)
