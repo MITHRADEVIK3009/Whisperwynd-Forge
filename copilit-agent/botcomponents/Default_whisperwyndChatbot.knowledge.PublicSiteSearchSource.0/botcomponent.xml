@@ -1,0 +1,11 @@
+<botcomponent schemaname="Default_whisperwyndChatbot.knowledge.PublicSiteSearchSource.0">
+  <componenttype>16</componenttype>
+  <description>The Microsoft home website.</description>
+  <iscustomizable>0</iscustomizable>
+  <name>Microsoft</name>
+  <parentbotid>
+    <schemaname>Default_whisperwyndChatbot</schemaname>
+  </parentbotid>
+  <statecode>0</statecode>
+  <statuscode>1</statuscode>
+</botcomponent>

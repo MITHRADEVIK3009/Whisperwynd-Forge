@@ -1,0 +1,245 @@
+kind: AdaptiveDialog
+modelDescription: This topic will help you create an add new characters to add the world of Whisperwind
+beginDialog:
+  kind: OnRecognizedIntent
+  id: main
+  intent: {}
+  actions:
+    - kind: AdaptiveCardPrompt
+      id: 8Uya8X
+      card: |-
+        {
+            "$schema": "https://adaptivecards.io/schemas/adaptive-card.json",
+            "body": [
+                {
+                    "type": "ColumnSet",
+                    "columns": [
+                        {
+                            "type": "Column",
+                            "width": "stretch",
+                            "items": [
+                                {
+                                    "type": "TextBlock",
+                                    "wrap": true,
+                                    "weight": "Bolder",
+                                    "color": "Accent",
+                                    "text": "New role in Whisperwybd"
+                                },
+                                {
+                                    "type": "ColumnSet",
+                                    "columns": [
+                                        {
+                                            "type": "Column",
+                                            "width": "auto",
+                                            "items": [
+                                                {
+                                                    "type": "Icon",
+                                                    "name": "Crown",
+                                                    "size": "xxSmall",
+                                                    "color": "Accent"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "Column",
+                                            "width": "stretch",
+                                            "spacing": "ExtraSmall",
+                                            "items": [
+                                                {
+                                                    "type": "TextBlock",
+                                                    "text": "A Simple Wizard to help define",
+                                                    "wrap": true,
+                                                    "size": "Small",
+                                                    "color": "Default",
+                                                    "isSubtle": true
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "spacing": "ExtraSmall"
+                                }
+                            ]
+                        }
+                    ],
+                    "spacing": "Medium",
+                    "targetWidth": "AtMost:Narrow"
+                },
+                {
+                    "placeholder": "Enter optional title",
+                    "spacing": "Medium",
+                    "type": "Input.Text",
+                    "id": "name",
+                    "label": "What is name of caracter?",
+                    "isRequired": true,
+                    "errorMessage": "I need a name "
+                },
+                {
+                    "choices": [
+                        {
+                            "title": "Human",
+                            "value": "Human"
+                        },
+                        {
+                            "title": "Fairy",
+                            "value": "Fairy"
+                        },
+                        {
+                            "title": "Cat",
+                            "value": "Cat"
+                        },
+                        {
+                            "title": "Dog",
+                            "value": "Dog"
+                        }
+                    ],
+                    "errorMessage": "We need to know this",
+                    "id": "specie",
+                    "isRequired": true,
+                    "label": "Specie",
+                    "spacing": "Medium",
+                    "type": "Input.ChoiceSet",
+                    "value": "1"
+                },
+                {
+                    "choices": [
+                        {
+                            "title": "Male",
+                            "value": "Male"
+                        },
+                        {
+                            "title": "Female",
+                            "value": "Female"
+                        },
+                        {
+                            "title": "Not Applicable",
+                            "value": "Not Applicable"
+                        }
+                    ],
+                    "id": "gender",
+                    "label": "What is the gender",
+                    "spacing": "Medium",
+                    "style": "expanded",
+                    "type": "Input.ChoiceSet",
+                    "isRequired": true,
+                    "errorMessage": "Select the gender"
+                },
+                {
+                    "id": "physical",
+                    "isMultiline": true,
+                    "spacing": "Small",
+                    "type": "Input.Text",
+                    "placeholder": "Provide a physical description of the appearance of the caracter.   What does your character look like? (e.g., hair color, eye color, height, clothing style)",
+                    "isRequired": true,
+                    "errorMessage": "Please answer",
+                    "label": "Physical Description"
+                },
+                {
+                    "id": "background",
+                    "isMultiline": true,
+                    "spacing": "Small",
+                    "type": "Input.Text",
+                    "placeholder": " What is your character's backstory? Where do they come from? What experiences have shaped them?",
+                    "isRequired": true,
+                    "errorMessage": "Please answer",
+                    "label": "Background Information"
+                },
+                {
+                    "id": "personality",
+                    "isMultiline": true,
+                    "spacing": "Small",
+                    "type": "Input.Text",
+                    "placeholder": "What are some key personality traits of your character? (e.g., brave, shy, curious)",
+                    "isRequired": true,
+                    "errorMessage": "Please answer",
+                    "label": "Personality"
+                },
+                {
+                    "id": "motivation",
+                    "isMultiline": true,
+                    "spacing": "Small",
+                    "type": "Input.Text",
+                    "placeholder": " What drives your character? What are their goals and dreams?",
+                    "isRequired": true,
+                    "errorMessage": "Please answer",
+                    "label": "Motivation"
+                },
+                {
+                    "id": "skills",
+                    "isMultiline": true,
+                    "spacing": "Small",
+                    "type": "Input.Text",
+                    "placeholder": "Does your character have any special skills or magical abilities?",
+                    "isRequired": true,
+                    "errorMessage": "Please answer",
+                    "label": "Skills"
+                },
+                {
+                    "id": "relationship",
+                    "isMultiline": true,
+                    "spacing": "Small",
+                    "type": "Input.Text",
+                    "placeholder": "Who are the important people in your character's life? Do they have friends, family, or enemies?",
+                    "isRequired": true,
+                    "errorMessage": "Please answer",
+                    "label": "Relationship"
+                },
+                {
+                    "id": "role",
+                    "isMultiline": true,
+                    "spacing": "Small",
+                    "type": "Input.Text",
+                    "placeholder": "What role does your character play in the world of Whisperynd? Are they a hero, a villain, a guide, etc.?",
+                    "isRequired": true,
+                    "errorMessage": "Please answer",
+                    "label": "Roles"
+                },
+                {
+                    "actions": [
+                        {
+                            "style": "positive",
+                            "title": "Submit",
+                            "type": "Action.Submit"
+                        }
+                    ],
+                    "separator": true,
+                    "spacing": "Medium",
+                    "type": "ActionSet"
+                }
+            ],
+            "type": "AdaptiveCard",
+            "version": "1.5"
+        }
+      output:
+        binding:
+          actionSubmitId: Topic.actionSubmitId
+          background: Topic.background
+          gender: Topic.gender
+          motivation: Topic.motivation
+          name: Topic.name
+          personality: Topic.personality
+          physical: Topic.physical
+          relationship: Topic.relationship
+          role: Topic.role
+          skills: Topic.skills
+          specie: Topic.specie
+
+      outputType:
+        properties:
+          actionSubmitId: String
+          background: String
+          gender: String
+          motivation: String
+          name: String
+          personality: String
+          physical: String
+          relationship: String
+          role: String
+          skills: String
+          specie: String
+
+    - kind: SendActivity
+      id: sendActivity_v3XhLg
+      activity: This is a POC right now.  Next I need to consume the imformation and store it.
+
+inputType: {}
+outputType: {}

@@ -1,0 +1,49 @@
+kind: AdaptiveDialog
+modelDescription: ADD AC2
+beginDialog:
+  kind: OnRecognizedIntent
+  id: main
+  intent: {}
+  actions:
+    - kind: InvokeFlowAction
+      id: invokeFlowAction_GetPersonas
+      input: {}
+      output:
+        result: =result
+
+      flowId: a7f2a8e3-fc21-f011-9989-6045bd018e81
+
+    - kind: AdaptiveCardPrompt
+      id: x4XrWl
+      card: |-
+        {
+          "type": "AdaptiveCard",
+          "body": [
+            {
+              "type": "TextBlock",
+              "text": "Click below to edit this SharePoint item",
+              "wrap": true
+            }
+          ],
+          "actions": [
+            {
+              "type": "Action.OpenUrl",
+              "title": "Edit Item",
+              "url": "https://argentquest.sharepoint.com/sites/WorldWhisperwynd/Lists/Story/DispForm.aspx?ID=1"
+            }
+          ],
+          "$schema": "https://adaptivecards.io/schemas/adaptive-card.json",
+          "version": "1.5"
+        }
+      output: {}
+      outputType: {}
+
+    - kind: SendActivity
+      id: sendActivity_Confirm
+      activity: "You selected Persona ID: {{selectedPersona}}"
+
+    - kind: EndDialog
+      id: endDialog_Finish
+
+inputType: {}
+outputType: {}

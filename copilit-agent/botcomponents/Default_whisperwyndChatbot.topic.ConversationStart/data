@@ -1,0 +1,13 @@
+kind: AdaptiveDialog
+beginDialog:
+  kind: OnConversationStart
+  id: main
+  actions:
+    - kind: SendActivity
+      id: sendMessage_M0LuhV
+      activity: |-
+        You are connected to Whisperynd Book of Knowledge.  It is an online resource to allow you to interact with the Magic Garden.
+        
+        You can ask me a question about the book.  As an example you can ask "**Who is Timmy**".
+        
+        You can also ask it to help create a story from the book.  Just type "**Make a Story**"
