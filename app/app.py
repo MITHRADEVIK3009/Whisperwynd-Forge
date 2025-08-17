@@ -2,41 +2,54 @@ import os
 import re
 import time
 import json
+import base64
 import logging
+import requests
 from datetime import datetime
 from functools import wraps
 from collections import defaultdict, deque
-from flask import Flask, request, jsonify
+
+from flask import Flask, request, jsonify, render_template
+from azure.storage.blob import BlobServiceClient
 from weasyprint import HTML
+from dotenv import load_dotenv
 
 # -------------------------------------------------------------------
 # CONFIGURATION
 # -------------------------------------------------------------------
+load_dotenv()
 
 app = Flask(__name__)
 
-# GUID format regex
+API_URL        = ""
+API_TOKEN      = os.environ.get("API_TOKEN")
+BEARER_TOKEN   = os.environ.get("BEARER_TOKEN")
+AZURE_CONN_STR = os.environ.get("AZURE_CONN_STR")
+CONTAINER_NAME = os.environ.get("CONTAINER_NAME", "images")
+
+os.makedirs("static/generated_images", exist_ok=True)
+
 GUID_REGEX = re.compile(
     r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
     re.IGNORECASE,
 )
 
-# Configure enhanced logging
+# -------------------------------------------------------------------
+# LOGGING
+# -------------------------------------------------------------------
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.FileHandler("app.log"),  # Log to file
-        logging.StreamHandler(),         # Log to console
+        logging.FileHandler("app.log"),
+        logging.StreamHandler(),
     ],
 )
 logger = logging.getLogger("image_generator")
 
-
 # -------------------------------------------------------------------
 # PERFORMANCE METRICS
 # -------------------------------------------------------------------
-
 class AppMetrics:
     def __init__(self):
         self.request_count = 0
@@ -69,7 +82,6 @@ class AppMetrics:
             sum(self.response_times) / len(self.response_times)
             if self.response_times else 0
         )
-
         return {
             "uptime_seconds": round(uptime, 2),
             "uptime_formatted": f"{uptime//3600:.0f}h {(uptime%3600)//60:.0f}m {uptime%60:.0f}s",
@@ -86,14 +98,11 @@ class AppMetrics:
             "endpoint_usage": dict(self.total_requests),
         }
 
-
 app_metrics = AppMetrics()
-
 
 # -------------------------------------------------------------------
 # DECORATORS
 # -------------------------------------------------------------------
-
 def monitor_performance(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -128,7 +137,6 @@ def monitor_performance(func):
             raise
     return wrapper
 
-
 def log_request_details(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -153,28 +161,39 @@ def log_request_details(func):
         return func(*args, **kwargs)
     return wrapper
 
-
 # -------------------------------------------------------------------
 # UTILS
 # -------------------------------------------------------------------
-
 def check_api_configuration():
-    """Dummy placeholder until real API config is added"""
     missing = []
     if not os.getenv("AZURE_STORAGE_KEY"):
         missing.append("AZURE_STORAGE_KEY")
     return missing
 
 def upload_blob(local_path, blob_name):
-    """Stub for blob upload - replace with actual Azure SDK upload"""
-    return f"http://localhost:5000/static/generated_images/{blob_name}"
-
+    try:
+        blob_service_client = BlobServiceClient.from_connection_string(AZURE_CONN_STR)
+        container_client = blob_service_client.get_container_client(CONTAINER_NAME)
+        try:
+            container_client.create_container()
+        except Exception:
+            pass
+        blob_client = blob_service_client.get_blob_client(container=CONTAINER_NAME, blob=blob_name)
+        with open(local_path, "rb") as data:
+            blob_client.upload_blob(data, overwrite=True)
+        return f"https://whiperimages.blob.core.windows.net/{CONTAINER_NAME}/{blob_name}"
+    except Exception as ex:
+        logger.error(f"Azure Blob upload error: {ex}")
+        return None
 
 # -------------------------------------------------------------------
 # ROUTES
 # -------------------------------------------------------------------
+@app.route('/')
+def home():
+    return render_template('index.html')
 
-@app.route("/generate", methods=["POST"])
+@app.route('/generate', methods=['POST'])
 @monitor_performance
 @log_request_details
 def generate_image():
@@ -186,35 +205,24 @@ def generate_image():
 
     logger.info(f"IMAGE GENERATION REQUEST: ID={rid}, Prompt='{prompt[:100]}', Dimensions={width}x{height}")
 
+    # Validation
     if not all([rid, prompt]):
         app_metrics.record_error("VALIDATION_ERROR", "Missing required fields")
         return jsonify(status="error", message="Missing request_id or prompt"), 400
-
     if not GUID_REGEX.match(rid):
         app_metrics.record_error("VALIDATION_ERROR", "Invalid GUID format")
         return jsonify(status="error", message="request_id must be a valid GUID"), 400
 
     missing_config = check_api_configuration()
     if missing_config:
-        app_metrics.record_error("CONFIG_ERROR", f"Missing config: {', '.join(missing_config)}")
-        return jsonify(
-            status="error",
-            message="Service configuration incomplete",
-            user_message=f"Missing: {', '.join(missing_config)}",
-            error_code="CONFIG_MISSING",
-            request_id=rid,
-            missing_config=missing_config,
-        ), 503
+        return jsonify(status="error", message="Service configuration incomplete"), 503
 
+    headers = {"Authorization": f"Bearer {BEARER_TOKEN}", "Content-Type": "application/json"}
+    payload = {"input": {"prompt": prompt, "width": width, "height": height}}
+
+    # --- Stub (replace with actual RunPod call) ---
     logger.info(f"Would generate image with prompt: '{prompt}' at {width}x{height}")
-    return jsonify(
-        status="info",
-        message="Image generation would proceed here (API keys needed)",
-        request_id=rid,
-        prompt=prompt,
-        dimensions=f"{width}x{height}",
-    )
-
+    return jsonify(status="info", message="Stub - replace with RunPod call", request_id=rid)
 
 @app.route("/convert_html_to_pdf", methods=["POST"])
 @monitor_performance
@@ -224,11 +232,8 @@ def convert_html_to_pdf():
     html_content = data.get("html")
 
     if not rid or not html_content:
-        app_metrics.record_error("VALIDATION_ERROR", "Missing PDF conversion fields")
         return jsonify(status="error", message="Missing request_id or html"), 400
-
     if not GUID_REGEX.match(rid):
-        app_metrics.record_error("VALIDATION_ERROR", "Invalid GUID for PDF")
         return jsonify(status="error", message="request_id must be a valid GUID"), 400
 
     try:
@@ -238,25 +243,16 @@ def convert_html_to_pdf():
 
         HTML(string=html_content, base_url=request.host_url).write_pdf(pdf_path)
         blob_url = upload_blob(pdf_path, pdf_filename)
-
-        logger.info(f"PDF CREATED - {pdf_filename}, Blob URL: {blob_url}")
         return jsonify(status="success", pdf_blob_url=blob_url)
     except Exception as e:
-        logger.exception(f"PDF CONVERSION FAILED - ID: {rid}")
-        app_metrics.record_error("PDF_ERROR", str(e))
+        logger.exception("PDF generation error")
         return jsonify(status="error", message=str(e)), 500
-
 
 @app.route("/stats", methods=["GET"])
 def get_stats():
     stats = app_metrics.get_stats()
     stats["status"] = "healthy" if app_metrics.failed_generations < app_metrics.successful_generations else "degraded"
-    stats["most_common_errors"] = dict(
-        sorted(app_metrics.error_count.items(), key=lambda x: x[1], reverse=True)[:5]
-    )
-    logger.info(f"STATS REQUESTED: {json.dumps(stats, indent=2)}")
     return jsonify(stats)
-
 
 @app.route("/health", methods=["GET"])
 def health_check():
@@ -267,31 +263,12 @@ def health_check():
         "status": "healthy" if not missing_config else "degraded",
         "timestamp": datetime.now().isoformat(),
         "uptime": stats["uptime_formatted"],
-        "configuration": {
-            "api_configured": len(missing_config) == 0,
-            "missing_config": missing_config,
-        },
-        "performance": {
-            "total_requests": stats["total_requests"],
-            "success_rate": stats["success_rate"],
-            "average_response_time": stats["average_response_time"],
-        },
-        "endpoints": {
-            "generate": "/generate",
-            "pdf_convert": "/convert_html_to_pdf",
-            "health": "/health",
-            "stats": "/stats",
-        },
     }
     return jsonify(health_status), (200 if not missing_config else 503)
-
 
 # -------------------------------------------------------------------
 # MAIN
 # -------------------------------------------------------------------
-
 if __name__ == "__main__":
     logger.info("Starting Image Generator Application")
-    logger.info("Statistics available at: http://localhost:5000/stats")
-    logger.info("Health check available at: http://localhost:5000/health")
-    app.run(debug=True)
+    app.run(debug=True, host='127.0.0.1', port=8000)
