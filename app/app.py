@@ -170,6 +170,64 @@ def check_api_configuration():
         missing.append("AZURE_STORAGE_KEY")
     return missing
 
+def validate_request_data(data):
+    """Validate incoming request data"""
+    rid = data.get("request_id")
+    if not rid:
+        return False, "Missing request_id"
+    if not GUID_REGEX.match(rid):
+        return False, "request_id must be a valid GUID"
+    return True, "Valid"
+
+def process_image_request(data):
+    """Core image processing logic"""
+    rid = data.get("request_id")
+    prompt = data.get("prompt")
+    width = data.get("width", 512)
+    height = data.get("height", 512)
+    
+    if not prompt:
+        return {"status": "error", "message": "Missing prompt"}
+    
+    # Simulate processing (replace with actual RunPod call)
+    logger.info(f"Processing image request: {rid} - '{prompt}' at {width}x{height}")
+    return {
+        "status": "success", 
+        "message": "Image generation completed",
+        "request_id": rid,
+        "prompt": prompt,
+        "dimensions": f"{width}x{height}"
+    }
+
+def process_pdf_request(data):
+    """Core PDF processing logic"""
+    rid = data.get("request_id")
+    html_content = data.get("html")
+    
+    if not html_content:
+        return {"status": "error", "message": "Missing html content"}
+    
+    try:
+        pdf_filename = f"{rid}.pdf"
+        pdf_path = os.path.join("static/generated_images", pdf_filename)
+        os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
+        
+        HTML(string=html_content, base_url="http://localhost:8000/").write_pdf(pdf_path)
+        blob_url = upload_blob(pdf_path, pdf_filename)
+        
+        return {
+            "status": "success",
+            "message": "PDF generated successfully",
+            "pdf_blob_url": blob_url,
+            "request_id": rid
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+def get_metrics():
+    """Get current application metrics"""
+    return app_metrics.get_stats()
+
 def upload_blob(local_path, blob_name):
     try:
         blob_service_client = BlobServiceClient.from_connection_string(AZURE_CONN_STR)
