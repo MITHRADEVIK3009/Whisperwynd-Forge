@@ -1,6 +1,6 @@
 # Whisperwynd
 
-![Whisperwynd_Illustration](images/Whisperwynd.png)
+![Whisperwynd_Illustration](Images/Whisperwynd.png)
 
 ## Quick Navigation
 - [Overview](#overview)
