@@ -1,0 +1,56 @@
+{
+  "persona": {
+    "ID": "1",
+    "Title": "Warrior",
+    "Description": "Strong and resilient fighter",
+    "Role": "Tank",
+    "AvatarUrl": "warrior.png"
+  },
+  "prompt": "guij",
+  "story": "Once upon a time in Whisperwynd, a Warrior took up a quest. guij With the strengths of a\nTank, they overcame trials and returned with newfound wisdom.",
+  "image_data_url_sample": "data:image/png;base64,QSBmYW50YXN5IHN0eWxlIGlsbHVzdHJhdGlvbiBvZiBhIG1pZ2h0eSBXYX...",
+  "image_file": "Warrior_mock.png",
+  "adaptive_card": {
+    "type": "AdaptiveCard",
+    "body": [
+      {
+        "type": "TextBlock",
+        "text": "**Choose Your Persona**",
+        "size": "Large",
+        "weight": "Bolder"
+      },
+      {
+        "type": "TextBlock",
+        "text": "Each persona comes with a role and abilities. Pick wisely!"
+      },
+      {
+        "type": "Input.ChoiceSet",
+        "id": "selectedPersona",
+        "style": "expanded",
+        "choices": [
+          {
+            "title": "Warrior",
+            "value": "1",
+            "description": "Strong and resilient fighter",
+            "role": "Tank",
+            "avatar": "warrior.png"
+          },
+          {
+            "title": "Mage",
+            "value": "2",
+            "description": "Master of arcane spells",
+            "role": "DPS",
+            "avatar": "mage.png"
+          }
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "type": "Action.Submit",
+        "title": "Submit"
+      }
+    ],
+    "version": "1.6"
+  }
+}

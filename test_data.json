@@ -1,0 +1,18 @@
+{
+  "value": [
+    {
+      "ID": "1",
+      "Title": "Warrior",
+      "Description": "Strong and resilient fighter",
+      "Role": "Tank",
+      "AvatarUrl": "warrior.png"
+    },
+    {
+      "ID": "2",
+      "Title": "Mage",
+      "Description": "Master of arcane spells",
+      "Role": "DPS",
+      "AvatarUrl": "mage.png"
+    }
+  ]
+}

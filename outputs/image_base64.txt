@@ -1,0 +1,1 @@
+data:image/png;base64,QSBmYW50YXN5IHN0eWxlIGlsbHVzdHJhdGlvbiBvZiBhIG1pZ2h0eSBXYXJyaW9yLCB3ZWFyaW5nIGFybW9yIGFuZCBob2xkaW5nIGEgZ2xvd2luZyBzd29yZC4=
